@@ -47,6 +47,7 @@ function seedWithTies(db: DatabaseSync, creators: number, seedValue: number): vo
   db.exec("BEGIN");
   campaign.run("cmp_ties", "Empates", JSON.stringify(["beleza", "moda", "tech"]));
   campaign.run("cmp_dup", "Nicho repetido", JSON.stringify(["moda", "moda", "games"]));
+  campaign.run("cmp_empty", "Sem nicho", "[]");
   for (const id of ids) {
     creator.run(id, `Nome ${id}`, JSON.stringify(Array.from({ length: below(4) }, () => pick(niches))));
     for (let a = below(3); a > 0; a -= 1) {
@@ -95,6 +96,11 @@ describe("equivalência com a implementação original (oráculo)", () => {
     expect(await expectSamePages(tiesDb, "cmp_ties", 20)).toBeGreaterThan(400);
     expect(await expectSamePages(tiesDb, "cmp_dup", 20)).toBeGreaterThan(400);
   }, 60_000);
+
+  it("campanha sem nichos e campanha inexistente respondem igual à original", async () => {
+    expect(await expectSamePages(tiesDb, "cmp_empty", 20)).toBe(0);
+    expect(await expectSamePages(tiesDb, "cmp_missing", 20)).toBe(0);
+  });
 
   it("lista igual à original com páginas que cortam grupos de empate (limit 7 e 50)", async () => {
     await expectSamePages(tiesDb, "cmp_ties", 7);
